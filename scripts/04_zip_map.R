@@ -1,6 +1,4 @@
-# 04_zip_map.R
-# Interactive map with a ZIP code search box (leaflet)
-
+#install.packages(c("leaflet", "leaflet.extras", "tigris"))
 library(dplyr)
 library(sf)
 library(tigris)
@@ -15,10 +13,9 @@ options(tigris_use_cache = TRUE)
 tracts <- st_read("data/clean/tracts_bank_access.gpkg")
 branches <- st_read("data/clean/branches_philly.gpkg")
 
-# ZIP code areas starting with 191 (Philadelphia), used only for the search box
+# ZIP code areas starting with 191 (PA)
 zips <- zctas(cb = TRUE, year = 2020, starts_with = "191")
 
-# one point inside each ZIP area, the map zooms to this point
 zip_pts <- zips %>%
   st_transform(2272) %>%
   st_point_on_surface() %>%
@@ -27,7 +24,6 @@ zip_pts <- zips %>%
 tracts <- st_transform(tracts, 4326)
 branches <- st_transform(branches, 4326)
 
-# hover text for each tract
 tract_label <- paste0(
   "<b>", tracts$tract, "</b><br>",
   "Median income: ", dollar(tracts$income, accuracy = 1), "<br>",
@@ -39,7 +35,7 @@ tract_label <- paste0(
 pal <- colorNumeric("Reds", domain = tracts$dist_mi)
 
 zip_map <- leaflet() %>%
-  addProviderTiles(providers$CartoDB.Positron) %>%
+  addTiles() %>%
   setView(lng = -75.13, lat = 40.00, zoom = 11) %>%
   addPolygons(
     data = tracts,
@@ -59,7 +55,6 @@ zip_map <- leaflet() %>%
     fillOpacity = 1,
     label = ~NAME
   ) %>%
-  # invisible ZIP points for the search box
   addCircleMarkers(
     data = zip_pts,
     radius = 0,
